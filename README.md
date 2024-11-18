@@ -2,12 +2,12 @@
 
 Remember to also clone and update the submodule
 ```
-git clone --recursive git@github.com:username/main-repo.git
+git clone --recursive https://github.com/jbwenjoy/golf-pose-preprocessing.git
 ```
 Or step by step
 ```
-git clone git@github.com:username/main-repo.git
-cd main-repo
+git clone https://github.com/jbwenjoy/golf-pose-preprocessing.git
+cd golf-pose-preprocessing
 git submodule init
 git submodule update
 ```

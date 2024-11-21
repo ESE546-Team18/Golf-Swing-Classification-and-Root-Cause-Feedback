@@ -17,13 +17,13 @@ For my case, I used a clean conda environment with the following versions
 
 ## Cloning the repository
 
-Remember to also clone and update the submodule
+Remember to also clone and update the submodules (mmpose and golfdb)
 
 ```bash
 git clone --recursive https://github.com/jbwenjoy/golf-pose-preprocessing.git
 ```
 
-Or step by step
+Or step by step (mmpose for example)
 
 ```bash
 git clone https://github.com/jbwenjoy/golf-pose-preprocessing.git

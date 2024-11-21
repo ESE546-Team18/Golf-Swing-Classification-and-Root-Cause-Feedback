@@ -1,0 +1,12 @@
+*.mp4
+*.mov
+*.jpg
+*.png
+*.pkl
+*.json
+*.csv
+
+__pycache__/
+*.py[cod]
+*$py.class
+**/*.pyc

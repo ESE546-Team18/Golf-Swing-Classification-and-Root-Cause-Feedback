@@ -49,6 +49,11 @@ ModuleNotFoundError: No module named 'mmpose'
  demo.mp4
 ```
 
+After you can run mmpose without any error, follow GolfDB's README to download the dataset and the pre-trained models. 
+`swingnet_1800.pth.tar` shoule be placed in `golfdb/models/`. 
+`mobilenet_v2.pth.tar` should be placed in `golfdb/`.
+Do not unzip these tar files.
+
 ## Extract golf poses from videos
 
 Put videos in `datafolder/videos`, go to the project root folder and run

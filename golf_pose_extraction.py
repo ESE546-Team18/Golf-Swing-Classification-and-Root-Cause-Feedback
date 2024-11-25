@@ -2,15 +2,21 @@ import os
 import sys
 
 project_root = os.path.dirname(os.path.abspath(__file__))
-
-project_root
-
 sys.path.append(os.path.join(project_root, 'mmpose'))
 
 video_folder = os.path.join(os.getcwd(), 'datafolder', 'videos')
 video_files = [f for f in os.listdir(video_folder) if f.endswith(('.mp4', '.MOV', '.mov'))]
 
+skip_processed = True
+
 for video_file in video_files:
+    if skip_processed:
+        # If the filename is already in the pose_extraction folder, 
+        # skip it to avoid reprocessing the same video twice
+        if os.path.exists(os.path.join('datafolder', 'pose_extraction', video_file)):
+            print(f'Video {video_file} already processed. Skipping...')
+            continue
+
     video_path = os.path.join(video_folder, video_file)
     command = f'python mmpose/demo/body3d_pose_lifter_demo.py ' \
               f'mmpose/demo/mmdetection_cfg/rtmdet_m_640-8xb32_coco-person.py ' \

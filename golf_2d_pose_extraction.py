@@ -2,6 +2,7 @@ import os
 import sys
 import logging
 from argparse import ArgumentParser
+from tqdm import tqdm
 
 def setup_env():
     """Setup the environment"""
@@ -35,7 +36,7 @@ def parse_args():
     parser.add_argument('--thickness', type=int, default=1, help='Link thickness for visualization')
     parser.add_argument('--alpha', type=float, default=0.8, help='The transparency of bboxes')
     parser.add_argument('--show', action='store_true', default=False, help='whether to show img')
-    parser.add_argument('--skip-processed', action='store_true', default=True, help='Skip already processed images')
+    parser.add_argument('--skip-processed', action='store_true', default=False, help='Skip already processed images')
     args = parser.parse_args()
     return args
 
@@ -84,24 +85,34 @@ def main():
     sub_data_folders = [f for f in os.listdir(base_data_folder) if os.path.isdir(os.path.join(base_data_folder, f))]
     sub_data_folders.sort()
 
-    for sub_data_folder in sub_data_folders:
-        sub_data_folder_path = os.path.join(base_data_folder, sub_data_folder)
-        data_files = [f for f in os.listdir(sub_data_folder_path) if f.endswith('.jpg')]
-        data_files.sort()
+    total_files = sum(len([f for f in os.listdir(os.path.join(base_data_folder, folder)) 
+                        if f.endswith('.jpg')])
+                    for folder in sub_data_folders)
+    
+    print(f"{total_files} files found")
+    
+    with tqdm(total=total_files, desc="Total Process Bar") as pbar:
+        for sub_data_folder in sub_data_folders:
+            sub_data_folder_path = os.path.join(base_data_folder, sub_data_folder)
+            data_files = [f for f in os.listdir(sub_data_folder_path) if f.endswith('.jpg')]
+            data_files.sort()
 
-        for file in data_files:
-            out_path = os.path.join(output_folder, f"{file}_vis_results.jpg")
+            sub_pbar = tqdm(data_files, desc=f"Processing {sub_data_folder}", leave=False)
             
-            if args.skip_processed and os.path.exists(out_path):
-                print(f'Image {file} already processed. Skipping...')
-                continue
+            for file in sub_pbar:
+                out_path = os.path.join(output_folder, f"{file}_vis_results.jpg")
+                
+                if args.skip_processed and os.path.exists(out_path):
+                    print(f'Image {file} already processed. Skipping...')
+                    pbar.update(1)
+                    continue
 
-            file_path = os.path.join(sub_data_folder_path, file)
-            print(f'Processing {file}...')
-            
-            process_image(model, visualizer, file_path, out_path, args)
-            
-            print(f'Saved results to {out_path}')
+                file_path = os.path.join(sub_data_folder_path, file)
+                process_image(model, visualizer, file_path, out_path, args)
+                
+                pbar.update(1)
+                sub_pbar.set_postfix_str(f"Processed {file}")
+            sub_pbar.close()
 
 if __name__ == '__main__':
     project_root = os.path.dirname(os.path.abspath(__file__))

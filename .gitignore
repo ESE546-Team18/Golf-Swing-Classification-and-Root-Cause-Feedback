@@ -1,3 +1,12 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.py[cod]
+*$py.class
+
+# Database files
 *.mp4
 *.mov
 *.jpg
@@ -6,7 +15,5 @@
 *.json
 *.csv
 
-__pycache__/
-*.py[cod]
-*$py.class
-**/*.pyc
+# Files to keep
+!datafolder/video_events.json

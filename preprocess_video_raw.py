@@ -1,7 +1,10 @@
-# Preprocess our own raw video files in datafolder/videos/* just like GolfDB does
-# 1. Reshape the videos to 160x160 when loading them
-# 2. Split the videos into 8 events and 1 no-event class, using the same technique as GolfDB (MobileNetV2 + SwingNet)
-# 3. Output one json file containing the split data for all videos (frame indexes, event labels, etc.)
+"""
+Preprocess our own raw video files in datafolder/videos/* just like GolfDB does
+    1. Reshape the videos to 160x160 when loading them
+    2. Split the videos into 8 events and 1 no-event class, using the same technique as GolfDB (MobileNetV2 + SwingNet)
+    3. Output one json file containing the split data for all videos (frame indexes, event labels, etc.)
+    4. Extract the corresponding frames for each event, save them in a separate folder for further processing
+"""
 
 import os
 import cv2
@@ -121,11 +124,64 @@ def detect_golf_events(all_probs):
     return preds
 
 
-def main():
-    # Set device
+def extract_event_frames(video_dir, events_json, output_dir, pad_frames=0):
+    """
+    Extract frames around each golf swing event from videos
+    Args:
+        video_dir: Directory containing the source videos
+        events_json: Path to JSON file with event timestamps
+        output_dir: Base directory to save extracted frames
+        pad_frames: Number of frames to extract before/after event frame
+    """
+    # Load event data
+    with open(events_json, 'r') as f:
+        events_data = json.load(f)
+    
+    # Create output directories for each event type
+    event_names = ['0.Address', '1.Toe-up', '2.Mid-backswing', '3.Top', 
+                   '4.Mid-downswing', '5.Impact', '6.Mid-follow-through', '7.Finish']
+    for event in event_names:
+        os.makedirs(os.path.join(output_dir, event), exist_ok=True)
+    
+    # Process each video
+    for video_data in events_data:
+        video_name = video_data['video_name']
+        video_path = os.path.join(video_dir, video_name)
+        event_frames = video_data['events']
+        
+        cap = cv2.VideoCapture(video_path)
+        total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+        
+        # Extract frames for each event
+        for event_idx, frame_idx in enumerate(event_frames):
+            frame_idx = int(frame_idx)
+            event_name = event_names[event_idx]
+            
+            # Calculate frame range to extract
+            start_frame = max(0, frame_idx - pad_frames)
+            end_frame = min(total_frames, frame_idx + pad_frames + 1)
+            
+            # Extract frames
+            for f in range(start_frame, end_frame):
+                cap.set(cv2.CAP_PROP_POS_FRAMES, f)
+                ret, frame = cap.read()
+                if ret:
+                    # Resize frame to 160x160
+                    frame = cv2.resize(frame, (160, 160))
+                    
+                    # Save frame
+                    out_filename = f"{video_name.split('.')[0]}_{f:04d}.jpg"
+                    out_path = os.path.join(output_dir, event_name, out_filename)
+                    cv2.imwrite(out_path, frame)
+        
+        cap.release()
+        print(f"Processed {video_name}")
+
+
+def predict_events_and_save():
+    """Predict events in raw videos and save the indices of event frames as json"""
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-    # Initialize model
     model = EventDetector(
         pretrain=True,
         width_mult=1.0,
@@ -135,12 +191,10 @@ def main():
         dropout=False,
     )
 
-    # Load pretrained weights
     save_dict = torch.load("golfdb/models/swingnet_1800.pth.tar")
     model.load_state_dict(save_dict["model_state_dict"])
     model = model.to(device)
 
-    # Create dataset
     transform = transforms.Compose(
         [ToTensor(), Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])]
     )
@@ -149,13 +203,17 @@ def main():
         video_dir="datafolder/square_videos", seq_length=64, transform=transform
     )
 
-    # Predict events
     results = predict_events(model, dataset, seq_length=64, device=device)
 
-    # Save results
     with open("datafolder/video_events.json", "w") as f:
         json.dump(results, f, indent=2)
 
 
 if __name__ == "__main__":
-    main()
+    # predict_events_and_save()
+    extract_event_frames(
+        video_dir="datafolder/square_videos",
+        events_json="datafolder/video_events.json", 
+        output_dir="datafolder/event_frames",
+        pad_frames=0
+    )

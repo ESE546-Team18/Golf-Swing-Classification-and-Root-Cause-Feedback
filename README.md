@@ -56,13 +56,21 @@ Do not unzip these tar files.
 
 ## Extract golf poses from videos
 
-Put videos in `datafolder/videos`, go to the project root folder and run
+* For event detection and 2D pose extraction, download the dataset here (Penn SEAS account required): https://drive.google.com/drive/folders/1CaQZyJLej_T2Z3MWrpB7nAlSEEJstGGx?usp=sharing. Remember to also read the README in the link. You should put the videos in `datafolder/square_videos/`. Then execute
 
-```bash
-python golf_pose_extraction.py
-```
+  ```bash
+  python golf_3d_pose_extraction.py
+  ```
 
-Output including visualization videos, json and pickle data will be saved in `datafolder/pose_extraction`.
+  Event frame detection result will be saved in `datafolder/video_events.json`. Pose extraction result (jpg files) will be saved in `datafolder/pose_extraction/`.
+
+* For 3D pose extraction, put @qqbao's videos in `datafolder/videos/`, go to the project root folder and run
+
+  ```bash
+  python golf_3d_pose_extraction.py
+  ```
+  
+  Output including visualization videos, json and pickle data will be saved in `datafolder/pose_extraction/`.
 
 ## TODO
 

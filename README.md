@@ -66,8 +66,10 @@ Output including visualization videos, json and pickle data will be saved in `da
 
 ## TODO
 
-1. Fix confidence score bugs
+1. Fix confidence score bugs (Done)
 
-2. Golf swing phase division
+2. Golf swing phase division (Done)
 
 3. Labeling
+
+4. NN architecture and training

@@ -3,6 +3,10 @@ import sys
 import logging
 from argparse import ArgumentParser
 from tqdm import tqdm
+import numpy as np
+import shutil
+import re
+from collections import defaultdict
 
 def setup_env():
     """Setup the environment"""
@@ -21,6 +25,7 @@ from mmpose.apis import inference_topdown, init_model
 from mmpose.registry import VISUALIZERS
 from mmpose.structures import merge_data_samples
 
+
 def parse_args():
     parser = ArgumentParser()
     parser.add_argument('--base-folder', default='datafolder/event_frames', help='Base folder containing image folders')
@@ -37,8 +42,10 @@ def parse_args():
     parser.add_argument('--alpha', type=float, default=0.8, help='The transparency of bboxes')
     parser.add_argument('--show', action='store_true', default=False, help='whether to show img')
     parser.add_argument('--skip-processed', action='store_true', default=False, help='Skip already processed images')
+    parser.add_argument('--with-original-img', action='store_true', default=False, help='Whether to use the original image as the background')
     args = parser.parse_args()
     return args
+
 
 def process_image(model, visualizer, img_path, out_path, args):
     # inference a single image
@@ -47,9 +54,10 @@ def process_image(model, visualizer, img_path, out_path, args):
 
     # show the results
     img = imread(img_path, channel_order='rgb')
+    white_background = np.ones_like(img) * 255
     visualizer.add_datasample(
         'result',
-        img,
+        img if args.with_original_img else white_background,
         data_sample=results,
         draw_gt=False,
         draw_bbox=True,
@@ -59,6 +67,56 @@ def process_image(model, visualizer, img_path, out_path, args):
         skeleton_style=args.skeleton_style,
         show=args.show,
         out_file=out_path)
+
+
+def sort_golf_swing_images(source_dir, target_dir):
+    # 1. Get all jpg files
+    jpg_files = [f for f in os.listdir(source_dir) if f.endswith('.jpg')]
+    
+    # 2. Group by file prefix
+    groups = defaultdict(list)
+    for file in jpg_files:
+        # Use regex to extract file prefix and number
+        match = re.match(r'(.+?)_(\d{4})\.jpg_vis_results\.jpg', file)
+        if match:
+            prefix, number = match.groups()
+            groups[prefix].append((int(number), file))
+    
+    # Define 8 action categories
+    categories = [
+        '0.Address',
+        '1.Toe-up', 
+        '2.Mid-backswing',
+        '3.Top',
+        '4.Mid-downswing',
+        '5.Impact',
+        '6.Mid-follow-through',
+        '7.Finish'
+    ]
+    
+    # Create target folders for each category
+    for category in categories:
+        category_dir = os.path.join(target_dir, category)
+        if not os.path.exists(category_dir):
+            os.makedirs(category_dir)
+    
+    # 3. Process each group
+    for prefix, files in groups.items():
+        # Sort by number
+        sorted_files = sorted(files, key=lambda x: x[0])
+        
+        # Check if there are exactly 8 files
+        if len(sorted_files) != 8:
+            print(f"Warning: Group {prefix} has {len(sorted_files)} files instead of 8")
+            continue
+            
+        # 4. Move files to corresponding category folders
+        for i, (number, filename) in enumerate(sorted_files):
+            src_path = os.path.join(source_dir, filename)
+            dst_path = os.path.join(target_dir, categories[i], filename)
+            shutil.move(src_path, dst_path)
+            print(f"Moved {filename} to {categories[i]}")
+
 
 def main():
     args = parse_args()
@@ -91,28 +149,36 @@ def main():
     
     print(f"{total_files} files found")
     
-    with tqdm(total=total_files, desc="Total Process Bar") as pbar:
-        for sub_data_folder in sub_data_folders:
-            sub_data_folder_path = os.path.join(base_data_folder, sub_data_folder)
-            data_files = [f for f in os.listdir(sub_data_folder_path) if f.endswith('.jpg')]
-            data_files.sort()
+    # with tqdm(total=total_files, desc="Total Process Bar") as pbar:
+    #     for sub_data_folder in sub_data_folders:
+    #         sub_data_folder_path = os.path.join(base_data_folder, sub_data_folder)
+    #         data_files = [f for f in os.listdir(sub_data_folder_path) if f.endswith('.jpg')]
+    #         data_files.sort()
 
-            sub_pbar = tqdm(data_files, desc=f"Processing {sub_data_folder}", leave=False)
+    #         sub_pbar = tqdm(data_files, desc=f"Processing {sub_data_folder}", leave=False)
             
-            for file in sub_pbar:
-                out_path = os.path.join(output_folder, f"{file}_vis_results.jpg")
+    #         for file in sub_pbar:
+    #             out_path = os.path.join(output_folder, f"{file}_vis_results.jpg")
                 
-                if args.skip_processed and os.path.exists(out_path):
-                    print(f'Image {file} already processed. Skipping...')
-                    pbar.update(1)
-                    continue
+    #             if args.skip_processed and os.path.exists(out_path):
+    #                 print(f'Image {file} already processed. Skipping...')
+    #                 pbar.update(1)
+    #                 continue
 
-                file_path = os.path.join(sub_data_folder_path, file)
-                process_image(model, visualizer, file_path, out_path, args)
+    #             file_path = os.path.join(sub_data_folder_path, file)
+    #             process_image(model, visualizer, file_path, out_path, args)
                 
-                pbar.update(1)
-                sub_pbar.set_postfix_str(f"Processed {file}")
-            sub_pbar.close()
+    #             pbar.update(1)
+    #             sub_pbar.set_postfix_str(f"Processed {file}")
+    #         sub_pbar.close()
+
+    print("Reorganizing images...")
+    source_directory = args.output_folder
+    target_directory = args.output_folder
+    sort_golf_swing_images(source_directory, target_directory)
+
+    print("Done")
+
 
 if __name__ == '__main__':
     project_root = os.path.dirname(os.path.abspath(__file__))

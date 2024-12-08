@@ -42,7 +42,7 @@ def parse_args():
     parser.add_argument('--alpha', type=float, default=0.8, help='The transparency of bboxes')
     parser.add_argument('--show', action='store_true', default=False, help='whether to show img')
     parser.add_argument('--skip-processed', action='store_true', default=False, help='Skip already processed images')
-    parser.add_argument('--with-original-img', action='store_true', default=False, help='Whether to use the original image as the background')
+    parser.add_argument('--with-original-img', action='store_true', default=True, help='Whether to use the original image as the background')
     args = parser.parse_args()
     return args
 
@@ -149,28 +149,28 @@ def main():
     
     print(f"{total_files} files found")
     
-    # with tqdm(total=total_files, desc="Total Process Bar") as pbar:
-    #     for sub_data_folder in sub_data_folders:
-    #         sub_data_folder_path = os.path.join(base_data_folder, sub_data_folder)
-    #         data_files = [f for f in os.listdir(sub_data_folder_path) if f.endswith('.jpg')]
-    #         data_files.sort()
+    with tqdm(total=total_files, desc="Total Process Bar") as pbar:
+        for sub_data_folder in sub_data_folders:
+            sub_data_folder_path = os.path.join(base_data_folder, sub_data_folder)
+            data_files = [f for f in os.listdir(sub_data_folder_path) if f.endswith('.jpg')]
+            data_files.sort()
 
-    #         sub_pbar = tqdm(data_files, desc=f"Processing {sub_data_folder}", leave=False)
+            sub_pbar = tqdm(data_files, desc=f"Processing {sub_data_folder}", leave=False)
             
-    #         for file in sub_pbar:
-    #             out_path = os.path.join(output_folder, f"{file}_vis_results.jpg")
+            for file in sub_pbar:
+                out_path = os.path.join(output_folder, f"{file}_vis_results.jpg")
                 
-    #             if args.skip_processed and os.path.exists(out_path):
-    #                 print(f'Image {file} already processed. Skipping...')
-    #                 pbar.update(1)
-    #                 continue
+                if args.skip_processed and os.path.exists(out_path):
+                    print(f'Image {file} already processed. Skipping...')
+                    pbar.update(1)
+                    continue
 
-    #             file_path = os.path.join(sub_data_folder_path, file)
-    #             process_image(model, visualizer, file_path, out_path, args)
+                file_path = os.path.join(sub_data_folder_path, file)
+                process_image(model, visualizer, file_path, out_path, args)
                 
-    #             pbar.update(1)
-    #             sub_pbar.set_postfix_str(f"Processed {file}")
-    #         sub_pbar.close()
+                pbar.update(1)
+                sub_pbar.set_postfix_str(f"Processed {file}")
+            sub_pbar.close()
 
     print("Reorganizing images...")
     source_directory = args.output_folder

@@ -7,6 +7,7 @@ import numpy as np
 import shutil
 import re
 from collections import defaultdict
+import cv2
 
 def setup_env():
     """Setup the environment"""
@@ -26,7 +27,7 @@ from mmpose.registry import VISUALIZERS
 from mmpose.structures import merge_data_samples
 
 
-def parse_args():
+def parse_args_images():
     parser = ArgumentParser()
     parser.add_argument('--base-folder', default='datafolder/event_frames', help='Base folder containing image folders')
     parser.add_argument('--output-folder', default='datafolder/pose_extraction', help='Output folder')
@@ -43,8 +44,7 @@ def parse_args():
     parser.add_argument('--show', action='store_true', default=False, help='whether to show img')
     parser.add_argument('--skip-processed', action='store_true', default=False, help='Skip already processed images')
     parser.add_argument('--with-original-img', action='store_true', default=True, help='Whether to use the original image as the background')
-    args = parser.parse_args()
-    return args
+    return parser.parse_args()
 
 
 def process_image(model, visualizer, img_path, out_path, args):
@@ -118,8 +118,8 @@ def sort_golf_swing_images(source_dir, target_dir):
             print(f"Moved {filename} to {categories[i]}")
 
 
-def main():
-    args = parse_args()
+def extract_pose_from_imgs():
+    args = parse_args_images()
 
     # build the model from a config file and a checkpoint file
     cfg_options = dict(model=dict(test_cfg=dict(output_heatmaps=True))) if args.draw_heatmap else None
@@ -181,6 +181,5 @@ def main():
 
 
 if __name__ == '__main__':
-    project_root = os.path.dirname(os.path.abspath(__file__))
-    sys.path.append(os.path.join(project_root, 'mmpose'))
-    main()
+    # Extract 2d poses from the key event frames
+    extract_pose_from_imgs()

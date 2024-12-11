@@ -15,6 +15,8 @@ __pycache__/
 *.json
 *.csv
 
+runs/
+
 # Files to keep
 !datafolder/video_events.json
 tempCodeRunnerFile.py

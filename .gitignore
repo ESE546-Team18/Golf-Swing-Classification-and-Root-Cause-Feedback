@@ -1,3 +1,9 @@
+# Files to keep
+!datafolder/
+!datafolder/video_events.json
+!datafolder/event_frames/
+!datafolder/event_frames/*.jpg
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.pyc
@@ -5,6 +11,8 @@ __pycache__/
 *.pyd
 *.py[cod]
 *$py.class
+
+tempCodeRunnerFile.py
 
 # Database files
 *.mp4
@@ -15,8 +23,5 @@ __pycache__/
 *.json
 *.csv
 
+# Tensorboard logs
 runs/
-
-# Files to keep
-!datafolder/video_events.json
-tempCodeRunnerFile.py

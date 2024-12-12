@@ -50,11 +50,17 @@ ModuleNotFoundError: No module named 'mmpose'
 ```
 
 After you can run mmpose without any error, follow GolfDB's README to download the dataset and the pre-trained models. 
-`swingnet_1800.pth.tar` shoule be placed in `golfdb/models/`. 
+`swingnet_1800.pth.tar` shoule be placed in `golfdb/models/`.
 `mobilenet_v2.pth.tar` should be placed in `golfdb/`.
 Do not unzip these tar files.
 
-## Extract golf poses from videos
+## Get event frames from videos using GolfDB's SwingNet
+
+```bash
+python get_event_frames_swingnet.py
+```
+
+## Extract golf poses from videos using mmpose
 
 * For event detection and 2D pose extraction, download the dataset here (Penn SEAS account required): https://drive.google.com/drive/folders/1CaQZyJLej_T2Z3MWrpB7nAlSEEJstGGx?usp=sharing. Remember to also read the README in the link. You should put the videos in `datafolder/square_videos/`. Then execute
 
@@ -71,6 +77,16 @@ Do not unzip these tar files.
   ```
   
   Output including visualization videos, json and pickle data will be saved in `datafolder/pose_extraction/`.
+
+## Preprocess the data for ResNet
+
+```bash
+python resnet_dataset_prep.py
+```
+
+## Training and testing
+
+Run Jupiter notebook `resnet_training.ipynb`.
 
 ## TODO
 

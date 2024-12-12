@@ -39,7 +39,9 @@ def process_golf_swing_images(base_dir):
     # Iterate through each phase directory
     phase_folders = sorted(os.listdir(base_dir))  # Ensure consistent order for phases
     image_dict = {}
+    reference_shape = None  # Store a reference image shape
 
+    # First pass: find a reference image shape and collect images
     for phase_folder in phase_folders:
         phase_path = os.path.join(base_dir, phase_folder)
         if not os.path.isdir(phase_path):
@@ -56,25 +58,40 @@ def process_golf_swing_images(base_dir):
                     continue
 
                 file_path = os.path.join(phase_path, file)
-                img = cv2.imread(file_path)  # Read the image
+                img = cv2.imread(file_path)
                 if img is None:
                     print(f"Unable to read image: {file_path}")
                     continue
 
-                # Group images by name
+                if reference_shape is None:
+                    reference_shape = img.shape
+
                 if name not in image_dict:
                     image_dict[name] = {"images": [None] * len(phase_folders), "label": label}
                 # Store the image in the correct phase slot
                 phase_idx = phase_folders.index(phase_folder)
                 image_dict[name]["images"][phase_idx] = img
 
-    # For each unique name, hstack all associated images
+    # Second pass: create hstacked images
     for name, data in image_dict.items():
-        # Ensure all phases have an image; if missing, replace with a black placeholder
-        images = [
-            img if img is not None else np.zeros_like(data["images"][0]) for img in data["images"]
-        ]
-        hstack_image = np.hstack(images)  # Horizontally stack images
+        if reference_shape is None:
+            print("Error: No valid reference image found")
+            continue
+
+        # Count missing frames
+        missing_frames = sum(1 for img in data["images"] if img is None)
+        
+        # Skip if more than 2 frames are missing
+        if missing_frames > 2:
+            print(f"Skipping {name} as {missing_frames} event frames missing")
+            continue
+            
+        # Create black placeholder with the same shape as reference image
+        placeholder = np.zeros(reference_shape, dtype=np.uint8)
+        
+        # Replace None with black placeholder
+        images = [img if img is not None else placeholder.copy() for img in data["images"]]
+        hstack_image = np.hstack(images)
         label = data["label"]
         results.append({"file_name": name, "hstack_image": hstack_image, "label": label})
 
@@ -109,6 +126,61 @@ def augment_images(images, good_sample_flip_prob=0.3):
                 augmented_images.append({"file_name": item["file_name"] + "_flipped",
                                          "hstack_image": flipped_image, "label": 1})
 
+    return augmented_images
+
+
+def create_partial_dropouts(images, good_swing_prob=0.3, bad_swing_prob=0.5):
+    """
+    Create new datapoints by randomly dropping events from clean data.
+    
+    :param images: list of dictionaries with 'hstack_image', 'file_name', and 'label'
+    :param good_swing_prob: probability of selecting a good swing for dropout
+    :param bad_swing_prob: probability of selecting a bad swing for dropout
+    :return: list of augmented images including original and dropout versions
+    """
+    augmented_images = []
+    num_events = 8
+    event_width = images[0]["hstack_image"].shape[1] // num_events
+    
+    # First, keep all original images
+    augmented_images.extend(images)
+    
+    # Find clean data (those with no black frames)
+    clean_data = []
+    for item in images:
+        # Split image into events
+        events = np.array_split(item["hstack_image"], num_events, axis=1)
+        # Check if all events are non-black
+        is_clean = all(np.mean(event) > 0 for event in events)
+        if is_clean:
+            clean_data.append(item)
+    
+    # Process clean data
+    for item in clean_data:
+        # Determine if we should process this swing based on its label
+        prob = good_swing_prob if item["label"] == 1 else bad_swing_prob
+        if random.random() > prob:
+            continue
+            
+        # Create two new versions with different dropouts
+        events_to_drop = random.sample(range(num_events), 2)
+        
+        for dropout_idx in events_to_drop:
+            # Create a copy of the image
+            new_image = item["hstack_image"].copy()
+            
+            # Create black frame for the dropped event
+            start_col = dropout_idx * event_width
+            end_col = start_col + event_width
+            new_image[:, start_col:end_col] = 0
+            
+            # Add to augmented dataset
+            augmented_images.append({
+                "file_name": f"{item['file_name']}_dropout_{dropout_idx}",
+                "hstack_image": new_image,
+                "label": item["label"]
+            })
+    
     return augmented_images
 
 
@@ -171,9 +243,12 @@ if __name__ == "__main__":
     #     print(f"Saved: {output_path}")
 
     # Augment images: flip all bad swings and good swings with a probability
-    augmented_output = augment_images(output, good_sample_flip_prob=0.3)
+    augmented_output = augment_images(output, good_sample_flip_prob=0.2)
 
-    # Resize images to 80x(80*8)
+    # Create partial dropouts for clean data
+    augmented_output = create_partial_dropouts(augmented_output, good_swing_prob=0.3, bad_swing_prob=0.5)
+
+    # Resize images if needed
     target_height = 160
     target_width = 160 * 8  # 8 phases
     resized_output = resize_images(augmented_output, target_height, target_width)
@@ -182,8 +257,8 @@ if __name__ == "__main__":
     train_data, test_data = split_dataset(resized_output, test_size=0.2)
 
     # If needed, save datasets for training and testing
-    train_dir = "datafolder/frames_without_bg_train_dataset"
-    test_dir = "datafolder/frames_without_bg_test_dataset"
+    train_dir = "datafolder/frames_no_bg_dropout_train"
+    test_dir = "datafolder/frames_no_bg_dropout_test"
     os.makedirs(train_dir, exist_ok=True)
     os.makedirs(test_dir, exist_ok=True)
 

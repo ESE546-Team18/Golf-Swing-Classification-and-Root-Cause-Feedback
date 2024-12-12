@@ -26,11 +26,10 @@ from mmpose.apis import inference_topdown, init_model
 from mmpose.registry import VISUALIZERS
 from mmpose.structures import merge_data_samples
 
-
-def parse_args_images():
+def parse_args_images(base_folder, output_folder, with_original_img):
     parser = ArgumentParser()
-    parser.add_argument('--base-folder', default='datafolder/event_frames', help='Base folder containing image folders')
-    parser.add_argument('--output-folder', default='datafolder/pose_extraction', help='Output folder')
+    parser.add_argument('--base-folder', default=base_folder, help='Base folder containing image folders')
+    parser.add_argument('--output-folder', default=output_folder, help='Output folder')
     parser.add_argument('--config', default='mmpose/td-hm_hrnet-w48_8xb32-210e_coco-256x192.py', help='Config file')
     parser.add_argument('--checkpoint', default='mmpose/td-hm_hrnet-w48_8xb32-210e_coco-256x192-0e67c616_20220913.pth', help='Checkpoint file')
     parser.add_argument('--device', default='cuda:0', help='Device used for inference')
@@ -43,7 +42,7 @@ def parse_args_images():
     parser.add_argument('--alpha', type=float, default=0.8, help='The transparency of bboxes')
     parser.add_argument('--show', action='store_true', default=False, help='whether to show img')
     parser.add_argument('--skip-processed', action='store_true', default=False, help='Skip already processed images')
-    parser.add_argument('--with-original-img', action='store_true', default=True, help='Whether to use the original image as the background')
+    parser.add_argument('--with-original-img', action='store_true', default=with_original_img, help='Whether to use the original image as the background')
     return parser.parse_args()
 
 
@@ -105,21 +104,23 @@ def sort_golf_swing_images(source_dir, target_dir):
         # Sort by number
         sorted_files = sorted(files, key=lambda x: x[0])
         
-        # Check if there are exactly 8 files
         if len(sorted_files) != 8:
-            print(f"Warning: Group {prefix} has {len(sorted_files)} files instead of 8")
-            continue
+            print(f"Note: Group {prefix} has {len(sorted_files)} frames")
             
         # 4. Move files to corresponding category folders
         for i, (number, filename) in enumerate(sorted_files):
+            if i >= len(categories):
+                print(f"Warning: More frames than categories for {prefix}, skipping extra frames")
+                break
+                
             src_path = os.path.join(source_dir, filename)
             dst_path = os.path.join(target_dir, categories[i], filename)
             shutil.move(src_path, dst_path)
             print(f"Moved {filename} to {categories[i]}")
 
 
-def extract_pose_from_imgs():
-    args = parse_args_images()
+def extract_pose_from_imgs(base_folder, output_folder, with_original_img):
+    args = parse_args_images(base_folder, output_folder, with_original_img)
 
     # build the model from a config file and a checkpoint file
     cfg_options = dict(model=dict(test_cfg=dict(output_heatmaps=True))) if args.draw_heatmap else None
@@ -182,4 +183,6 @@ def extract_pose_from_imgs():
 
 if __name__ == '__main__':
     # Extract 2d poses from the key event frames
-    extract_pose_from_imgs()
+    extract_pose_from_imgs(base_folder='datafolder/event_frames', 
+                           output_folder='datafolder/pose_extraction/without_bg', 
+                           with_original_img=False)

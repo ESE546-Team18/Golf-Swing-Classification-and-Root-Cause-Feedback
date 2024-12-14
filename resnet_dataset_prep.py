@@ -101,7 +101,7 @@ def process_golf_swing_images(base_dir):
 def augment_images(images, good_sample_flip_prob=0.3):
     """
     Perform data augmentation:
-    - Mirror-flip bad swings (-1 label) entirely.
+    - Mirror-flip all bad swings (-1 label).
     - Mirror-flip good swings (1 label) with a given probability.
 
     :param images: list of dictionaries containing 'file_name', 'hstack_image', and 'label'
@@ -116,15 +116,17 @@ def augment_images(images, good_sample_flip_prob=0.3):
 
         if item["label"] == -1:
             # Add a horizontally flipped version for bad swings
-            flipped_image = cv2.flip(item["hstack_image"], 1)  # Horizontal flip
+            flipped_images = [cv2.flip(img, 1) for img in np.array_split(item["hstack_image"], 8, axis=1)]
+            flipped_hstack_image = np.hstack(flipped_images)
             augmented_images.append({"file_name": item["file_name"] + "_flipped",
-                                     "hstack_image": flipped_image, "label": -1})
+                                     "hstack_image": flipped_hstack_image, "label": -1})
         elif item["label"] == 1:
             # Flip good swings with a probability
             if random.random() < good_sample_flip_prob:
-                flipped_image = cv2.flip(item["hstack_image"], 1)  # Horizontal flip
+                flipped_images = [cv2.flip(img, 1) for img in np.array_split(item["hstack_image"], 8, axis=1)]
+                flipped_hstack_image = np.hstack(flipped_images)
                 augmented_images.append({"file_name": item["file_name"] + "_flipped",
-                                         "hstack_image": flipped_image, "label": 1})
+                                         "hstack_image": flipped_hstack_image, "label": 1})
 
     return augmented_images
 
@@ -246,7 +248,7 @@ if __name__ == "__main__":
     augmented_output = augment_images(output, good_sample_flip_prob=0.2)
 
     # Create partial dropouts for clean data
-    augmented_output = create_partial_dropouts(augmented_output, good_swing_prob=0.3, bad_swing_prob=0.5)
+    augmented_output = create_partial_dropouts(augmented_output, good_swing_prob=0.3, bad_swing_prob=0.7)
 
     # Resize images if needed
     target_height = 160

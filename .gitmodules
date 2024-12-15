@@ -1,7 +1,6 @@
 [submodule "mmpose"]
 	path = mmpose
-	url = https://github.com/546-final/mmpose.git
+	url = https://github.com/ESE546-Team18/mmpose.git
 [submodule "golfdb"]
 	path = golfdb
-	url = https://github.com/546-final/golfdb.git
-
+	url = https://github.com/ESE546-Team18/golfdb.git

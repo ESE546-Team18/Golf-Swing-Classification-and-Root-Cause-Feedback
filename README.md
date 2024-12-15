@@ -88,12 +88,4 @@ python resnet_dataset_prep.py
 
 Run Jupiter notebook `resnet_training.ipynb`.
 
-## TODO
-
-1. Fix confidence score bugs (Done)
-
-2. Golf swing phase division (Done)
-
-3. Labeling
-
-4. NN architecture and training
+To run Grad-CAM on SwingNet, run `python golfdb/grad_cam_demo.py -p [your_video_path]`

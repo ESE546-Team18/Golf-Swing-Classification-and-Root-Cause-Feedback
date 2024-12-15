@@ -11,9 +11,9 @@ skip_processed = True
 
 for video_file in video_files:
     if skip_processed:
-        # If the filename is already in the pose_extraction folder, 
+        # If the filename is already in the 2_pose_extraction folder, 
         # skip it to avoid reprocessing the same video twice
-        if os.path.exists(os.path.join('datafolder', 'pose_extraction', video_file)):
+        if os.path.exists(os.path.join('datafolder', '2_pose_extraction', video_file)):
             print(f'Video {video_file} already processed. Skipping...')
             continue
 
@@ -29,7 +29,7 @@ for video_file in video_files:
               f'https://download.openmmlab.com/mmpose/body3d/videopose/' \
               f'mmpose/videopose_h36m_243frames_fullconv_supervised_cpn_ft-88f5abbb_20210527.pth ' \
               f'--input {video_path} ' \
-              f'--output-root datafolder/pose_extraction ' \
+              f'--output-root datafolder/2_pose_extraction ' \
               f'--save-predictions'
     
     print(f'Start processing video {video_file}...')

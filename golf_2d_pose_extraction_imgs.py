@@ -183,6 +183,6 @@ def extract_pose_from_imgs(base_folder, output_folder, with_original_img):
 
 if __name__ == '__main__':
     # Extract 2d poses from the key event frames
-    extract_pose_from_imgs(base_folder='datafolder/event_frames', 
-                           output_folder='datafolder/pose_extraction/without_bg', 
-                           with_original_img=False)
+    extract_pose_from_imgs(base_folder='datafolder/1_original_event_frames', 
+                           output_folder='datafolder/2_pose_extraction/with_bg', 
+                           with_original_img=True)

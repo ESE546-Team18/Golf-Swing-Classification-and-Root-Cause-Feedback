@@ -19,6 +19,6 @@ def count_frames_in_folder(folder_path):
 
 
 if __name__ == "__main__":
-    folder_path = "datafolder/square_videos/"
+    folder_path = "datafolder/0_square_videos/"
     # folder_path = "golfdb/data/videos_160/"
     count_frames_in_folder(folder_path)

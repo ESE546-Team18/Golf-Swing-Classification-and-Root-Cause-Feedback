@@ -6,7 +6,7 @@ project_root = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(os.path.join(project_root, 'mmpose'))
 
 # Path to the video folder
-video_folder = os.path.join(project_root, 'datafolder', 'square_videos')
+video_folder = os.path.join(project_root, 'datafolder', '0_square_videos')
 output_folder = os.path.join(project_root, 'datafolder', 'video_2d_pose_extraction')
 
 # Ensure the output folder exists
@@ -20,7 +20,7 @@ skip_processed = True
 
 for video_file in video_files:
     if skip_processed:
-        # If the filename already exists in the pose_extraction folder, skip to avoid reprocessing
+        # If the filename already exists in the 2_pose_extraction folder, skip to avoid reprocessing
         if os.path.exists(os.path.join(output_folder, video_file)):
             print(f'Video {video_file} already processed. Skipping...')
             continue

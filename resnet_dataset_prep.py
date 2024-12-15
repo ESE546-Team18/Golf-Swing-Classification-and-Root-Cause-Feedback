@@ -6,15 +6,17 @@ import numpy as np
 from sklearn.model_selection import train_test_split
 
 
-def extract_image_info(filename):
+def extract_image_info(filename, original=False):
     """
     Extract the name before the underscore, the 4-digit frame number after the underscore, and the label from the image filename.
 
     :param filename: str, image filename (e.g., 'IMG_6182-00_0029.jpg')
     :return: tuple, (name, frame_number, label)
     """
-    # match = re.match(r"(.+?)_(\d{4})\.jpg$", filename)
-    match = re.match(r"(.+?)_(\d{4})\.jpg_vis_results\.jpg$", filename)
+    if original:
+        match = re.match(r"(.+?)_(\d{4})\.jpg$", filename)
+    else:
+        match = re.match(r"(.+?)_(\d{4})\.jpg_vis_results\.jpg$", filename)
 
     if match:
         name = match.group(1)  # Part before the underscore
@@ -26,7 +28,7 @@ def extract_image_info(filename):
         raise ValueError(f"Incorrect filename format: {filename}")
 
 
-def process_golf_swing_images(base_dir):
+def process_golf_swing_images(base_dir, original=False):
     """
     Traverse directories containing golf swing stages, extract the filename, frame number, and label for each image,
     hstack images with the same name (one per phase), and assign a label.
@@ -52,7 +54,7 @@ def process_golf_swing_images(base_dir):
         for file in sorted(os.listdir(phase_path)):
             if file.endswith(".jpg"):
                 try:
-                    name, frame_number, label = extract_image_info(file)
+                    name, frame_number, label = extract_image_info(file, original=original)
                 except ValueError as e:
                     print(e)
                     continue
@@ -226,9 +228,15 @@ def save_dataset(dataset, output_dir):
 
 
 if __name__ == "__main__":
-    base_directory = "datafolder/pose_extraction/without_bg"
+    # Fix random seed for reproducibility
+    RANDOM_SEED = 42
+    random.seed(RANDOM_SEED)
+    np.random.seed(RANDOM_SEED)
 
-    output = process_golf_swing_images(base_directory)
+    # base_directory = "datafolder/2_pose_extraction/without_bg"
+    base_directory = "datafolder/2_pose_extraction/with_bg"
+
+    output = process_golf_swing_images(base_directory, original=False)
 
     # # If needed, save the hstacked images
     # output_dir = "test_output"
@@ -259,13 +267,35 @@ if __name__ == "__main__":
     train_data, test_data = split_dataset(resized_output, test_size=0.2)
 
     # If needed, save datasets for training and testing
-    train_dir = "datafolder/frames_no_bg_dropout_train"
-    test_dir = "datafolder/frames_no_bg_dropout_test"
+    train_dir = "datafolder/3_frames_no_bg_dropout_train"
+    test_dir = "datafolder/3_frames_no_bg_dropout_test"
+    train_dir = "datafolder/3_frames_with_bg_dropout_train"
+    test_dir = "datafolder/3_frames_with_bg_dropout_test"
+
     os.makedirs(train_dir, exist_ok=True)
     os.makedirs(test_dir, exist_ok=True)
 
     save_dataset(train_data, train_dir)
     save_dataset(test_data, test_dir)
 
+    print(f"Training dataset saved to {train_dir}")
+    print(f"Testing dataset saved to {test_dir}")
+
+    # Also save the original frames in the same structure for comparison
+    original_dir = "datafolder/1_original_event_frames"
+    os.makedirs(original_dir, exist_ok=True)
+    output = process_golf_swing_images(original_dir, original=True)
+    argumented_output = augment_images(output, good_sample_flip_prob=0.2)
+    argumented_output = create_partial_dropouts(argumented_output, good_swing_prob=0.3, bad_swing_prob=0.7)
+    target_height = 160
+    target_width = 160 * 8  # 8 phases
+    resized_output = resize_images(argumented_output, target_height, target_width)
+    train_data, test_data = split_dataset(resized_output, test_size=0.2)
+    train_dir = "datafolder/3_original_event_frames_dropout_train"
+    test_dir = "datafolder/3_original_event_frames_dropout_test"
+    os.makedirs(train_dir, exist_ok=True)
+    os.makedirs(test_dir, exist_ok=True)
+    save_dataset(train_data, train_dir)
+    save_dataset(test_data, test_dir)
     print(f"Training dataset saved to {train_dir}")
     print(f"Testing dataset saved to {test_dir}")

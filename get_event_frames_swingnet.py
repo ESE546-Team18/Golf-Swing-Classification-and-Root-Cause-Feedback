@@ -200,7 +200,7 @@ def predict_events_and_save():
     )
 
     dataset = RawGolfVideoDataset(
-        video_dir="datafolder/square_videos", seq_length=64, transform=transform
+        video_dir="datafolder/0_square_videos", seq_length=64, transform=transform
     )
 
     results = predict_events(model, dataset, seq_length=64, device=device)
@@ -212,8 +212,8 @@ def predict_events_and_save():
 if __name__ == "__main__":
     # predict_events_and_save()
     extract_event_frames(
-        video_dir="datafolder/square_videos",
+        video_dir="datafolder/0_square_videos",
         events_json="datafolder/video_events.json", 
-        output_dir="datafolder/event_frames",
+        output_dir="datafolder/1_original_event_frames",
         pad_frames=0
     )

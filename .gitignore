@@ -1,8 +1,8 @@
 # Files to keep
 !datafolder/
 !datafolder/video_events.json
-!datafolder/event_frames/
-!datafolder/event_frames/*.jpg
+!datafolder/1_original_event_frames/
+!datafolder/1_original_event_frames/*.jpg
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

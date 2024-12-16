@@ -1,4 +1,4 @@
-# golf-pose-preprocessing
+# Golf-Swing-Classification-and-Root-Cause-Feedback
 
 ## mmpose installation
 

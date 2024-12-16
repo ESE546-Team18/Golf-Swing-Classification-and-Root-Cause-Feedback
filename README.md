@@ -20,14 +20,14 @@ For my case, I used a clean conda environment with the following versions
 Remember to also clone and update the submodules (mmpose and golfdb)
 
 ```bash
-git clone --recursive https://github.com/jbwenjoy/golf-pose-preprocessing.git
+git clone --recursive https://github.com/ESE546-Team18/Golf-Swing-Classification-and-Root-Cause-Feedback.git
 ```
 
 Or step by step (mmpose for example)
 
 ```bash
-git clone https://github.com/jbwenjoy/golf-pose-preprocessing.git
-cd golf-pose-preprocessing
+git clone https://github.com/ESE546-Team18/Golf-Swing-Classification-and-Root-Cause-Feedback.git
+cd Golf-Swing-Classification-and-Root-Cause-Feedback
 git submodule init
 git submodule update
 ```
@@ -62,7 +62,7 @@ python get_event_frames_swingnet.py
 
 ## Extract golf poses from videos using mmpose
 
-* For event detection and 2D pose extraction, download the dataset here (Penn SEAS account required): https://drive.google.com/drive/folders/1CaQZyJLej_T2Z3MWrpB7nAlSEEJstGGx?usp=sharing. Remember to also read the README in the link. You should put the videos in `datafolder/0_square_videos/`. Then execute
+* For event detection and 2D pose extraction, download the dataset (160x160 videos) here (Penn SEAS account required): https://drive.google.com/drive/folders/1CaQZyJLej_T2Z3MWrpB7nAlSEEJstGGx?usp=sharing. Remember to also read the README in the link. You should put the videos in `datafolder/0_square_videos/`. Then execute
 
   ```bash
   python golf_2d_pose_extraction.py
